@@ -1,18 +1,14 @@
 {
   "timeZone": "America/Los_Angeles",
   "dependencies": {
-    "enabledAdvancedServices": [{
-      "userSymbol": "Drive",
-      "serviceId": "drive",
-      "version": "v2"
-    }]
+    "enabledAdvancedServices": [
+      {
+        "userSymbol": "Drive",
+        "version": "v2",
+        "serviceId": "drive"
+      }
+    ]
   },
   "exceptionLogging": "STACKDRIVER",
-  "runtimeVersion": "V8",
-  "sheets": {
-    "macros": [{
-      "menuName": "copy",
-      "functionName": "copy"
-    }]
-  }
+  "runtimeVersion": "V8"
 }

@@ -1,10 +1,17 @@
 function onOpen(e) {
   var ui = SpreadsheetApp.getUi();
-  ui.createMenu("Import CSV data 👉️")
-    .addItem("Import from URL", "importCSVFromUrl")
-    .addItem("Import from Drive", "importCSVFromDrive")
+  ui.createMenu("Auto Update")
+    .addItem("Copy Data", "dataCopy")
+    .addItem("Update Market Values", "addMarketValues")
+    .addItem("Automate", "Automate")
     .addToUi();
 }
+
+function Automate(){
+  dataCopy()
+  addMarketValues()
+}
+
 
 
 function importCSVFromUrl() {
@@ -28,7 +35,7 @@ function findFilesInDrive(filename) {
 }
 
 function getTextFromPDF() {
-  //var fileName = promptUserForInput("Please enter the name of the CSV file to import from Google Drive:");
+  //var fileName = promptUserForInput("Please enter the name of the pdf file (ie. document.pdf):");
   var files = findFilesInDrive("document.pdf");
   if(files.length === 0) {
     displayToastAlert("No files with name \"" + fileName + "\" were found in Google Drive.");
@@ -73,33 +80,43 @@ function getMarketValue(txt,ticker){
   count = 3 //third back
   if (numbers[numbers.length-1].includes("%")){ count = 4}
   if (numbers.length>=count){
-    return numbers[numbers.length-count]
+    marketvalue = numbers[numbers.length-count]
+    marketvalue = marketvalue.replace(/\$/g,"")
+    return marketvalue
   }
 }
 
 function getCash(txt){
-  txt = getTextFromPDF()
   const regexp = new RegExp(`Cash, Money Funds and Bank Deposits [\s\0-9/.,$%]*`, 'g')
   numbers = txt.match(regexp)[0]
   numbers = numbers.trim().split(" ")
   count = 1
   if (numbers[numbers.length-1].includes("%")){ count = 2}
   if (numbers.length>=count){
-    console.log(numbers[numbers.length-count])
     return numbers[numbers.length-count]
   }
 }
 
-
-function extractTextFromPDF() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet()
-  //Get all PDF files:
-  const folder = DriveApp.getFolderById("1G-47eVNyxqI9_bWyzh9M_ePWCAZc_vLV");
-  //const files = folder.getFiles();
-  const files = folder.getFilesByType("application/pdf");
-
-  
+function addMarketValues(){
+  sheet = getSheet()
+  txt = getTextFromPDF()
+  var [row,length] = getRowLengthOfBox()
+  cash = getCash(txt)
+  sheet.getRange("H"+(row+4)).setValue(cash)
+  finalrow = row+length
+  row = row+5
+  values = sheet.getRange("B"+row+":B"+finalrow).getValues()
+  values.forEach((ticker,indx) => { 
+    ticker = ticker[0]
+    if (ticker != ""){
+      marketValue = getMarketValue(txt,ticker)
+      v = row+indx
+      sheet.getRange("H"+v).setValue(marketValue)
+    }
+  })
 }
+
+
 
 function allWhite(row){
   return row.every(function (e) {
@@ -107,7 +124,7 @@ function allWhite(row){
   });
 }
 function getSheet(){
-  return SpreadsheetApp.getActive().getSheetByName("Sheet1")
+  return SpreadsheetApp.getActive().getSheetByName("Monthly")
 }
 
 function getRowLengthOfBox(){
@@ -127,9 +144,9 @@ function getRowLengthOfBox(){
       found = true
     }
   }
-  length = length + 2
+  length = length + 3
   row = row -2
-  console.log(row,length)
+  console.log(row)
   return [row, length]
 }
 
@@ -139,31 +156,13 @@ function dataCopy(){
   lastcol = sheet.getLastColumn()
   
   var [row,length] = getRowLengthOfBox()
-
+  console.log(row)
   oldRange = sheet.getRange(row,1,length,lastcol)
-  newRange = sheet.getRange(lastrow+1,1,length,lastcol)
+  newRange = sheet.getRange(row+length,1,length,lastcol)
   oldRange.copyTo(newRange, SpreadsheetApp.CopyPasteType.PASTE_NORMAL, false);
-  date = sheet.getRange(lastrow+2,1,1,1).getValue()
+  date = sheet.getRange(row+length+1,1,1,1).getValue()
   var firstDay = new Date(date.getFullYear(), date.getMonth()+1, 1);
   var lastDay = new Date(date.getFullYear(), date.getMonth() + 2, 0); 
   sheet.getRange(lastrow+2,1,1,3).setValues([[firstDay,"",lastDay]])
 }
 
-function addMarketValues(){
-  sheet = getSheet()
-  txt = getTextFromPDF()
-  
-  var [row,length] = getRowLengthOfBox()
-  finalrow = row+length
-  row = row+5
-  values = sheet.getRange("B"+row+":B"+finalrow).getValues()
-  console.log(values)
-  values.forEach((ticker,indx) => { 
-    ticker = ticker[0]
-    if (ticker != ""){
-      marketValue = getMarketValue(txt,ticker)
-      v = row+indx
-      sheet.getRange("H"+v).setValue(marketValue)
-    }
-  })
-}
