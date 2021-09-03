@@ -35,8 +35,8 @@ function findFilesInDrive(filename) {
 }
 
 function getTextFromPDF() {
-  //var fileName = promptUserForInput("Please enter the name of the pdf file (ie. document.pdf):");
-  var files = findFilesInDrive("document.pdf");
+  var fileName = promptUserForInput("Please enter the name of the pdf file (ie. document.pdf):");
+  var files = findFilesInDrive(fileName);
   if(files.length === 0) {
     displayToastAlert("No files with name \"" + fileName + "\" were found in Google Drive.");
     return;
